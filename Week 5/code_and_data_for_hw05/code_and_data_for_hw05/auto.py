@@ -1,6 +1,6 @@
 import numpy as np
 import code_for_hw5 as hw5
-
+import os
 #-------------------------------------------------------------------------------
 # Auto Data
 #-------------------------------------------------------------------------------
@@ -44,4 +44,29 @@ auto_values, mu, sigma = hw5.std_y(auto_values)
 #Your code for cross-validation goes here
 #Make sure to scale the RMSE values returned by xval_learning_alg by sigma,
 #as mentioned in the lab, in order to get accurate RMSE values on the dataset
+max = ((0, 0, 1), hw5.xval_learning_alg(auto_data[0], auto_values, 0, 10)[0][0] * sigma)
 
+# Checking what minimizes RMSE out of ALL feature sets, polynomial orders, and lambdas
+"""
+for featureSet in range(2):
+    for lam in np.arange(stop=.11, step=.01):
+        for poly in range(1, 4):
+            print((featureSet, lam, poly))
+            features = hw5.make_polynomial_feature_fun(poly)(auto_data[featureSet])
+            score = hw5.xval_learning_alg(features, auto_values, lam, 10) * sigma
+
+            print(score)
+            if score[0][0] < max[1]:
+                max = ((featureSet, lam, poly), score[0][0])
+"""
+# Checking what minimizes for first features set of order 3
+polyfunc = hw5.make_polynomial_feature_fun(3)
+features = polyfunc(auto_data[0])
+min = (0, hw5.xval_learning_alg(features, auto_values, 0, 10) * sigma)
+
+for lam in np.arange(stop=100, step=2):
+    score = hw5.xval_learning_alg(polyfunc(auto_data[0]), auto_values, lam, 10) * sigma
+    if score < min[1]:
+        min = (lam, score)
+
+print(min)

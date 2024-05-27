@@ -145,82 +145,28 @@ def d_mean_square_loss_th(x, y, th, th0):
     #Your code here
     return np.sum(d_square_loss_th(x, y, th, th0), axis=1, keepdims = True) / x.shape[1]
     
+# Write a function that returns the gradient of lin_reg(x, th, th0)
+# with respect to th0. Hint: Think carefully about what the dimensions of the returned value should be!
 def d_lin_reg_th0(x, th, th0):
-    """ Returns the gradient of lin_reg(x, th, th0) with respect to th0.
-
-    >>> x = np.array([[ 1.,  2.,  3.,  4.], [ 1.,  1.,  1.,  1.]])
-    >>> th = np.array([[ 1.  ], [ 0.05]]) ; th0 = np.array([[ 2.]])
-    >>> d_lin_reg_th0(x, th, th0).tolist()
-    [[1.0, 1.0, 1.0, 1.0]]
-    """
-    #Your code here
-    pass
-
+    return np.array([[1] * x.shape[1]])
+    
+# Write a function that returns the gradient of square_loss(x, y, th, th0) with
+# respect to th0.  It should be a one-line expression that uses lin_reg and
+# d_lin_reg_th0.
 def d_square_loss_th0(x, y, th, th0):
-    """ Returns the gradient of square_loss(x, y, th, th0) with
-        respect to th0.
+    return 2 * d_lin_reg_th0(x, th, th0) * (lin_reg(x, th, th0) - y)
 
-    # Note: uses broadcasting!
-
-    >>> X = np.array([[ 1.,  2.,  3.,  4.], [ 1.,  1.,  1.,  1.]])
-    >>> Y = np.array([[ 1. ,  2.2,  2.8,  4.1]])
-    >>> th = np.array([[ 1.  ], [ 0.05]]) ; th0 = np.array([[ 2.]])
-    >>> d_square_loss_th0(X, Y, th, th0).tolist()
-    [[4.1, 3.6999999999999993, 4.5, 3.9000000000000004]]
-    """
-    #Your code here
-    pass
-
+# Write a function that returns the gradient of mean_square_loss(x, y, th, th0) with
+# respect to th0.  It should be a one-line expression that uses d_square_loss_th0.
 def d_mean_square_loss_th0(x, y, th, th0):
-    """ Returns the gradient of mean_square_loss(x, y, th, th0) with
-    respect to th0.
+    return np.sum(d_square_loss_th0(x, y, th, th0), axis = 1, keepdims=True) / x.shape[1]
 
-    >>> X = np.array([[ 1.,  2.,  3.,  4.], [ 1.,  1.,  1.,  1.]])
-    >>> Y = np.array([[ 1. ,  2.2,  2.8,  4.1]])
-    >>> th = np.array([[ 1.  ], [ 0.05]]) ; th0 = np.array([[ 2.]])
-    >>> d_mean_square_loss_th0(X, Y, th, th0).tolist()
-    [[4.05]]
-    """
-    #Your code here
-    pass
 
 def d_ridge_obj_th(x, y, th, th0, lam):
-    """Return the derivative of tghe ridge objective value with respect
-    to theta.
-
-    Note: uses broadcasting to add d x n to d x 1 array below
-
-    >>> X = np.array([[ 1.,  2.,  3.,  4.], [ 1.,  1.,  1.,  1.]])
-    >>> Y = np.array([[ 1. ,  2.2,  2.8,  4.1]])
-    >>> th = np.array([[ 1.  ], [ 0.05]]) ; th0 = np.array([[ 2.]])
-    >>> d_ridge_obj_th(X, Y, th, th0, 0.0).tolist()
-    [[10.15], [4.05]]
-    >>> d_ridge_obj_th(X, Y, th, th0, 0.5).tolist()
-    [[11.15], [4.1]]
-    >>> d_ridge_obj_th(X, Y, th, th0, 100.).tolist()
-    [[210.15], [14.05]]
-    """
-    #Your code here
-    pass
+    return d_mean_square_loss_th(x, y, th, th0) + 2 * lam * th
 
 def d_ridge_obj_th0(x, y, th, th0, lam):
-    """Return the derivative of tghe ridge objective value with respect
-    to theta.
-
-    Note: uses broadcasting to add d x n to d x 1 array below
-
-    >>> X = np.array([[ 1.,  2.,  3.,  4.], [ 1.,  1.,  1.,  1.]])
-    >>> Y = np.array([[ 1. ,  2.2,  2.8,  4.1]])
-    >>> th = np.array([[ 1.  ], [ 0.05]]) ; th0 = np.array([[ 2.]])
-    >>> d_ridge_obj_th0(X, Y, th, th0, 0.0).tolist()
-    [[4.05]]
-    >>> d_ridge_obj_th0(X, Y, th, th0, 0.5).tolist()
-    [[4.05]]
-    >>> d_ridge_obj_th0(X, Y, th, th0, 100.).tolist()
-    [[4.05]]
-    """
-    #Your code here
-    pass
+    return d_mean_square_loss_th0(x, y, th, th0)
 
 #Concatenates the gradients with respect to theta and theta_0
 def ridge_obj_grad(x, y, th, th0, lam):
@@ -259,7 +205,29 @@ def sgd(X, y, J, dJ, w0, step_size_fn, max_iter):
 
     """
     #Your code here
-    pass
+    n = X.shape[1]
+
+    w = w0
+    randIndex = np.random.randint(n)
+    fs = []
+    ws = []
+
+    for i in range(max_iter):
+        ws.append(w)
+        fs.append(J(
+            X[:,randIndex:randIndex+1], 
+            y[:,randIndex:randIndex+1], 
+            w
+        ))
+
+        randIndex = np.random.randint(n)
+        w = w - step_size_fn(i) * dJ(
+            X[:,randIndex:randIndex+1], 
+            y[:,randIndex:randIndex+1], 
+            w
+        )
+    
+    return (w, fs, ws)
 
 ############################################################
 #From HW04; Used in the test case for sgd, below
