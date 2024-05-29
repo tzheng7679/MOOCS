@@ -50,12 +50,13 @@ class Tanh(Module):  # Layer activation
         return self.A
 
     def backward(self, dLdA):  # Uses stored self.A
-        return None  # Your code: return dLdZ (?, b)
+        return dLdA * (1 - self.A * self.A)  # Your code: return dLdZ (?, b)
 
 
 class ReLU(Module):  # Layer activation
     def forward(self, Z):
-        self.A = None  # Your code: (?, b)
+        Zstacked = np.hstack((Z, np.zeros((Z.shape[0], 1))))
+        self.A = np.max(Zstacked, axis=1)  # Your code: (?, b)
         return self.A
 
     def backward(self, dLdA):  # uses stored self.A
