@@ -24,16 +24,16 @@ class Linear(Module):
 
     def forward(self, A):
         self.A = A   # (m x b)  Hint: make sure you understand what b stands for
-        return self.W.T @ A  # Your code (n x b)
+        return self.W.T @ A + self.W0  # Your code (n x b)
 
     def backward(self, dLdZ):  # dLdZ is (n x b), uses stored self.A
         self.dLdW  = self.A @ dLdZ.T  # Your code
-        self.dLdW0 = dLdZ             # Your code
+        self.dLdW0 = np.sum(dLdZ, axis=1, keepdims=True)           # Your code
         return self.W @ dLdZ          # Your code: return dLdA (m x b)
 
     def sgd_step(self, lrate):  # Gradient descent step
         self.W -= lrate * self.dLdW # Your code
-        self.W0 -= lrate * np.sum(self.dLdW0, axis=1, keepdims=True)  # Your code
+        self.W0 -= lrate * self.dLdW0  # Your code
 
 
 # Activation modules
@@ -50,7 +50,7 @@ class Tanh(Module):  # Layer activation
         return self.A
 
     def backward(self, dLdA):  # Uses stored self.A
-        return dLdA * (1 - self.A * self.A)  # Your code: return dLdZ (?, b)
+        return dLdA * (1.0 - self.A * self.A)  # Your code: return dLdZ (?, b)
 
 
 class ReLU(Module):  # Layer activation
@@ -68,8 +68,8 @@ class ReLU(Module):  # Layer activation
 
 class SoftMax(Module):  # Output activation
     def forward(self, Z):
-        po = np.e ** Z
-        return po / np.sum(po, axis = 0)  # Your code: (?, b)
+        po = np.exp(Z)
+        return po / np.sum(po, axis = 0)          # Your code: (?, b)
 
     def backward(self, dLdZ):  # Assume that dLdZ is passed in
         return dLdZ
@@ -92,9 +92,9 @@ class NLL(Module):  # Loss
     def forward(self, Ypred, Y):
         self.Ypred = Ypred
         self.Y = Y
-        return -np.sum(
+        return float(-np.sum(
             Y * np.log(Ypred)
-        )  # Your code: return loss (scalar)
+        ))  # Your code: return loss (scalar)
 
     def backward(self):  # Use stored self.Ypred, self.Y
         return self.Ypred - self.Y # Your code (?, b)
@@ -109,17 +109,22 @@ class Sequential:
     def sgd(self, X, Y, iters=100, lrate=0.005):  # Train
         D, N = X.shape
         loss = 0
+        b = 0
         for it in range(iters):
-            r = np.random.randint(0, N - 1)
+            r = np.random.randint(0, N - b)
 
-            data = X[:,r:r+1]
-            label = Y[0:1,r:r+1]
+            data = X[:,r:r+b+1]
+            label = Y[:,r:r+b+1]
 
             data = self.forward(Xt = data)
-            loss = self.loss.forward(data, Y[0:1,r:r+1].T)
+            loss = self.loss.forward(data, label)
 
             dLdA = self.loss.backward()
             self.backward(dLdA)
+
+            self.sgd_step(lrate)
+            
+            self.print_accuracy(it, X, Y, loss)
 
     def forward(self, Xt):  # Compute Ypred
         for m in self.modules: Xt = m.forward(Xt)
@@ -326,18 +331,19 @@ sgd_test(Sequential([Linear(2,3), ReLU(), Linear(3,2), SoftMax()], NLL()), test_
 
 # TEST 3: you should achieve 100% accuracy on the hard dataset (note
 # that we provided plotting code)
-"""
+
 X, Y = hard()
 nn = Sequential([Linear(2, 10), ReLU(), Linear(10, 10), ReLU(), Linear(10,2), SoftMax()], NLL())
-disp.classify(X, Y, nn, it=100000)
-"""
+disp.classify(X, Y, nn, it=60000)
+
+
 
 # TEST 4: try calling these methods that train with a simple dataset
-def nn_tanh_test():
+def nn_tanh_test(iters=1):
     np.random.seed(0)
     nn = Sequential([Linear(2, 3), Tanh(), Linear(3, 2), SoftMax()], NLL())
     X, Y = super_simple_separable()
-    nn.sgd(X, Y, iters=1, lrate=0.005)
+    nn.sgd(X, Y, iters=iters, lrate=0.005)
     return [np.vstack([nn.modules[0].W, nn.modules[0].W0.T]).tolist(),
             np.vstack([nn.modules[2].W, nn.modules[2].W0.T]).tolist()]
 
@@ -359,10 +365,7 @@ def nn_pred_test():
     Ypred = nn.forward(X)
     return nn.modules[-1].class_fun(Ypred).tolist(), [nn.loss.forward(Ypred, Y)]
 
-
-
 print(nn_tanh_test())
-
 # Expected output
 '''
     [[[1.2473733761848262, 0.2829538808226157, 0.6924193292712828],
