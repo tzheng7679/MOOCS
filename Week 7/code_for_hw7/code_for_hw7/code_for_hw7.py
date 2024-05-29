@@ -24,16 +24,16 @@ class Linear(Module):
 
     def forward(self, A):
         self.A = A   # (m x b)  Hint: make sure you understand what b stands for
-        return None  # Your code (n x b)
+        return self.W.T @ A  # Your code (n x b)
 
     def backward(self, dLdZ):  # dLdZ is (n x b), uses stored self.A
-        self.dLdW  = None  # Your code
-        self.dLdW0 = None  # Your code
-        return None        # Your code: return dLdA (m x b)
+        self.dLdW  = self.A @ dLdZ.T  # Your code
+        self.dLdW0 = dLdZ             # Your code
+        return self.W @ dLdZ          # Your code: return dLdA (m x b)
 
     def sgd_step(self, lrate):  # Gradient descent step
-        self.W  = None  # Your code
-        self.W0 = None  # Your code
+        self.W -= lrate * self.dLdW # Your code
+        self.W0 -= lrate * self.dLdW0  # Your code
 
 
 # Activation modules
