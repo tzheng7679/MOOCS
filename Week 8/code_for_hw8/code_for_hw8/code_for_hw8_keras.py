@@ -8,14 +8,14 @@ import itertools
 
 import math as m 
 
-from keras.models import Sequential
-from keras.optimizers import SGD, Adam
-from keras.layers import Conv1D, Conv2D, Dense, Dropout, Flatten, MaxPooling2D
-from keras.utils import np_utils
-from keras.callbacks import Callback
-from keras.datasets import mnist
-from keras import backend as K
-from keras.initializers import VarianceScaling
+from keras._tf_keras.keras.models import Sequential
+from keras._tf_keras.keras.optimizers import SGD, Adam
+from keras._tf_keras.keras.layers import Conv1D, Conv2D, Dense, Dropout, Flatten, MaxPooling2D
+from keras._tf_keras.keras.utils import to_categorical
+from keras._tf_keras.keras.callbacks import Callback
+from keras._tf_keras.keras.datasets import mnist
+from keras._tf_keras.keras import backend as K
+from keras._tf_keras.keras.initializers import VarianceScaling
 from matplotlib import pyplot as plt
 
 ######################################################################
@@ -24,13 +24,17 @@ from matplotlib import pyplot as plt
 
 def archs(classes):
     return [[Dense(input_dim=2, units=classes, activation="softmax")],
+            
             [Dense(input_dim=2, units=10, activation='relu'),
              Dense(units=classes, activation="softmax")],
+
             [Dense(input_dim=2, units=100, activation='relu'),
              Dense(units=classes, activation="softmax")],
+
             [Dense(input_dim=2, units=10, activation='relu'),
              Dense(units=10, activation='relu'),
              Dense(units=classes, activation="softmax")],
+
             [Dense(input_dim=2, units=100, activation='relu'),
              Dense(units=100, activation='relu'),
              Dense(units=classes, activation="softmax")]]
@@ -127,12 +131,12 @@ def run_keras_2d(data_name, layers, epochs, display=True, split=0.25, verbose=Tr
     X_val, y2, _ = get_data_set(val_dataset)
     X_test, y3, _ = get_data_set(test_dataset)
     # Categorize the labels
-    y_train = np_utils.to_categorical(y, num_classes) # one-hot
+    y_train = to_categorical(y, num_classes) # one-hot
     y_val = y_test = None
     if X_val is not None:
-        y_val = np_utils.to_categorical(y2, num_classes) # one-hot        
+        y_val = to_categorical(y2, num_classes) # one-hot        
     if X_test is not None:
-        y_test = np_utils.to_categorical(y3, num_classes) # one-hot
+        y_test = to_categorical(y3, num_classes) # one-hot
     val_acc, test_acc = 0, 0
     for trial in range(trials):
         # Reset the weights
@@ -287,8 +291,8 @@ def run_keras_fc_mnist(train, test, layers, epochs, split=0.1, verbose=True, tri
     X_val = X_val.reshape((X_val.shape[0], m*m))
     # Categorize the labels
     num_classes = 10
-    y_train = np_utils.to_categorical(y1, num_classes)
-    y_val = np_utils.to_categorical(y2, num_classes)
+    y_train = to_categorical(y1, num_classes)
+    y_val = to_categorical(y2, num_classes)
     # Train, use split for validation
     val_acc, test_acc = 0, 0
     for trial in range(trials):
@@ -320,8 +324,8 @@ def run_keras_cnn_mnist(train, test, layers, epochs, split=0.1, verbose=True, tr
     X_val = X_val.reshape((X_val.shape[0], m, m, 1))
     # Categorize the labels
     num_classes = 10
-    y_train = np_utils.to_categorical(y1, num_classes)
-    y_val = np_utils.to_categorical(y2, num_classes)
+    y_train = to_categorical(y1, num_classes)
+    y_val = to_categorical(y2, num_classes)
     # Train, use split for validation
     val_acc, test_acc = 0, 0
     for trial in range(trials):

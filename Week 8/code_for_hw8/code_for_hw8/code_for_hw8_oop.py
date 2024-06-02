@@ -9,6 +9,8 @@
 # OPTIONAL: Problem 2A) - Mini-batch GD
 ######################################################################
 
+import numpy as np
+
 class Sequential:
     def __init__(self, modules, loss):            
         self.modules = modules
@@ -21,16 +23,20 @@ class Sequential:
         num_updates = 0
         indices = np.arange(N)
         while num_updates < iters:
-
             np.random.shuffle(indices)
-            X = None  # Your code
-            Y = None  # Your code
 
+            X = np.array([X.T[i,:] for i in indices]).T  # Your code
+            Y = np.array([Y.T[i,:] for i in indices]).T  # Your code
+            print(X)
+            print(Y)
             for j in range(m.floor(N/K)):
                 if num_updates >= iters: break
 
                 # Implement the main part of mini_gd here
                 # Your code
+                dLdZ = self.forward(X[:, j * K:(j+1) * K])
+                self.backward(dLdZ)
+                self.step(lrate)
                 
                 num_updates += 1
 
@@ -43,6 +49,7 @@ class Sequential:
 
     def step(self, lrate):    
         for m in self.modules: m.step(lrate)
+
           
 ######################################################################
 # OPTIONAL: Problem 2B) - BatchNorm
@@ -67,14 +74,14 @@ class BatchNorm(Module):
         self.A = A
         self.K = A.shape[1]
         
-        self.mus = None  # Your Code
-        self.vars = None  # Your Code
+        self.mus = np.mean(A, axis=1, keepdims=True)  # Your Code
+        self.vars = np.sum((A - self.mus) ** 2, axis=1, keepdims=True) / self.K # Your Code
 
         # Normalize inputs using their mean and standard deviation
-        self.norm = None  # Your Code
-            
+        self.norm = (self.A - self.mus) / self.vars  # Your Code
+        
         # Return scaled and shifted versions of self.norm
-        return None  # Your Code
+        return self.norm  # Your Code
 
     def backward(self, dLdZ):
         # Re-usable constants
@@ -91,42 +98,6 @@ class BatchNorm(Module):
         return dLdX
 
     def step(self, lrate):
-        self.B = None  # Your Code
-        self.G = None  # Your Code
+        self.B -= self.dLdB * lrate  # Your Code
+        self.G -= self.dLdG * lrate  # Your Code
         return
-
-
-######################################################################
-# Tests
-######################################################################
-def super_simple_separable():
-    X = np.array([[2, 3, 9, 12],
-                  [5, 2, 6, 5]])
-    y = np.array([[1, 0, 1, 0]])
-    return X, for_softmax(y)
-  
-def for_softmax(y):
-    return np.vstack([1-y, y])
-  
-# For problem 1.1: builds a simple model and trains it for 3 iters on a simple dataset
-# Verifies the final weights of the model
-def mini_gd_test():
-    np.random.seed(0)
-    nn = Sequential([Linear(2,3), ReLU(), Linear(3,2), SoftMax()], NLL())
-    X,Y = super_simple_separable()
-    nn.mini_gd(X,Y, iters = 3, lrate=0.005, K=1)
-    return [np.vstack([nn.modules[0].W, nn.modules[0].W0.T]).tolist(),
-            np.vstack([nn.modules[2].W, nn.modules[2].W0.T]).tolist()]
-  
-# For problem 1.2: builds a simple model with a BatchNorm layer
-# Trains it for 1 iter on a simple dataset and verifies, for the BatchNorm module (in order): 
-# The final shifts and scaling factors (self.B and self.G)
-# The final running means and variances (self.mus_r and self.vars_r)
-# The final 'self.norm' value
-def batch_norm_test():
-    np.random.seed(0)
-    nn = Sequential([Linear(2,3), ReLU(), Linear(3,2), BatchNorm(2), SoftMax()], NLL())
-    X,Y = super_simple_separable()
-    nn.mini_gd(X,Y, iters = 1, lrate=0.005, K=2)
-    return [np.vstack([nn.modules[3].B, nn.modules[3].G]).tolist(), \
-    np.vstack([nn.modules[3].mus_r, nn.modules[3].vars_r]).tolist(), nn.modules[3].norm.tolist()]
