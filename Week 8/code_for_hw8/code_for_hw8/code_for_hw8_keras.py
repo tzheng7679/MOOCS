@@ -232,8 +232,9 @@ def train_neural_counter(layers,data,loss_func='mse',display=False):
     model=Sequential()
     for layer in layers:
         model.add(layer)
-    model.summary()    
     model.compile(loss=loss_func, optimizer=Adam())
+    model.summary()    
+
     history = LossHistory()    
     model.fit(X_train, Y_train, epochs=epochs, batch_size=batch, validation_data=(X_val, Y_val),callbacks=[history], verbose=True)
     err=model.evaluate(X_test,Y_test)
@@ -290,13 +291,13 @@ def run_keras_fc_mnist(train, test, layers, epochs, split=0.1, verbose=True, tri
     for trial in range(trials):
         # Reset the weights
         # See https://github.com/keras-team/keras/issues/341
-        session = K.get_session()
-        for layer in layers:
-            for v in layer.__dict__:
-                v_arg = getattr(layer, v)
-                if hasattr(v_arg, 'initializer'):
-                    initializer_func = getattr(v_arg, 'initializer')
-                    initializer_func.run(session=session)
+        # session = K.get_session()
+        # for layer in layers:
+        #     for v in layer.__dict__:
+        #         v_arg = getattr(layer, v)
+        #         if hasattr(v_arg, 'initializer'):
+        #             initializer_func = getattr(v_arg, 'initializer')
+        #             initializer_func.run(session=session)
         # Run the model
         model, history, vacc, tacc = \
                 run_keras(X_train, y_train, X_val, y_val, None, None, layers, epochs, split=split, verbose=verbose)
@@ -321,15 +322,15 @@ def run_keras_cnn_mnist(train, test, layers, epochs, split=0.1, verbose=True, tr
     # Train, use split for validation
     val_acc, test_acc = 0, 0
     for trial in range(trials):
-        # Reset the weights
-        # See https://github.com/keras-team/keras/issues/341
-        session = K.get_session()
-        for layer in layers:
-            for v in layer.__dict__:
-                v_arg = getattr(layer, v)
-                if hasattr(v_arg, 'initializer'):
-                    initializer_func = getattr(v_arg, 'initializer')
-                    initializer_func.run(session=session)
+        # # Reset the weights
+        # # See https://github.com/keras-team/keras/issues/341
+        # session = K.get_session()
+        # for layer in layers:
+        #     for v in layer.__dict__:
+        #         v_arg = getattr(layer, v)
+        #         if hasattr(v_arg, 'initializer'):
+        #             initializer_func = getattr(v_arg, 'initializer')
+        #             initializer_func.run(session=session)
         # Run the model
         model, history, vacc, tacc = \
                 run_keras(X_train, y_train, X_val, y_val, None, None, layers, epochs, split=split, verbose=verbose)
