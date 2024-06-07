@@ -56,13 +56,49 @@ class MDP:
 def value_iteration(mdp, q, eps = 0.01, interactive_fn = None,
                     max_iters = 10000):
     # Your code here
-    pass
+    for iter in range(max_iters):
+        maxDelt = 0
+        new_q = q.copy()
+
+        for a in q.actions:
+            for s in q.states:
+                transition_model = mdp.transition_model(s=s,a=a)
+                reward = mdp.reward_fn(s=s, a=a)
+                val = transition_model.expectation(lambda s_1: value(q, s_1))
+
+                new_q.set(
+                    s=s, a=a,
+                    v = reward + mdp.discount_factor * val
+                )
+
+                currDelt = abs(q.get(s=s, a=a) - new_q.get(s=s, a=a))
+                maxDelt = max(currDelt, maxDelt)
+        
+        q = new_q
+        if maxDelt < eps: return q
+
+    return q
 
 # Compute the q value of action a in state s with horizon h, using
 # expectimax
 def q_em(mdp, s, a, h):
     # Your code here
-    pass
+    if h == 0: return 0
+
+    base_reward = mdp.reward_fn(s=s, a=a)
+    
+    transition_model = mdp.transition_model(s=s, a=a)
+    
+    exp = 0
+    for pos in transition_model.support():
+        prob = transition_model.prob(pos)
+        
+        max_act = 0
+        for act in mdp.actions: max_act = max(max_act, q_em(mdp, s=pos, a=act, h=h-1))
+        
+        exp += prob * max_act
+
+    return base_reward + mdp.discount_factor * exp
 
 # Given a state, return the value of that state, with respect to the
 # current definition of the q function
@@ -77,7 +113,7 @@ def value(q, s):
     10
     """
     # Your code here
-    pass
+    return max( [q.get(s, a) for a in q.actions] )
 
 # Given a state, return the action that is greedy with reespect to the
 # current definition of the q function
@@ -94,7 +130,7 @@ def greedy(q, s):
     'b'
     """
     # Your code here
-    pass
+    return np.argmax( [q.get(s, a) for a in q.actions] )
 
 def epsilon_greedy(q, s, eps = 0.5):
     """ Return an action.
