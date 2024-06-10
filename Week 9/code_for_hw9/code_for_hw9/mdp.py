@@ -133,7 +133,7 @@ def greedy(q, s):
     return np.argmax( [q.get(s, a) for a in q.actions] )
 
 def epsilon_greedy(q, s, eps = 0.5):
-    """ Return an action.
+    """ Returns an action.
 
     >>> q = TabularQ([0,1,2,3],['b','c'])
     >>> q.set(0, 'b', 5)
@@ -146,11 +146,10 @@ def epsilon_greedy(q, s, eps = 0.5):
     'b'
     """
     if random.random() < eps:  # True with prob eps, random action
-        # Your code here
-        pass
+        return uniform_dist(q.actions).draw()
     else:
-        # Your code here
-        pass
+        return greedy(q, s)
+
 
 class TabularQ:
     def __init__(self, states, actions):
