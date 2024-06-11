@@ -1,3 +1,4 @@
+import sys
 import pdb
 import random
 import numpy as np
@@ -65,15 +66,46 @@ class MDP:
 # dictionary mapping (s, a) pairs into Q values This must be
 # initialized before interactive_fn is called the first time.
 
-def value_iteration(mdp, q, eps = 0.01, max_iters = 1000):
-    # Your code here (COPY FROM HW9)
-    raise NotImplementedError('value_iteration')
+def value_iteration(mdp, q, eps = 0.01, interactive_fn = None,
+                    max_iters = 10000):
+    # Your code here
+    for iter in range(max_iters):
+        maxDelt = 0
+        new_q = q.copy()
+
+        for a in q.actions:
+            for s in q.states:
+                transition_model = mdp.transition_model(s=s,a=a)
+                reward = mdp.reward_fn(s=s, a=a)
+                val = transition_model.expectation(lambda s_1: value(q, s_1))
+
+                new_q.set(
+                    s=s, a=a,
+                    v = reward + mdp.discount_factor * val
+                )
+
+                currDelt = abs(q.get(s=s, a=a) - new_q.get(s=s, a=a))
+                maxDelt = max(currDelt, maxDelt)
+        
+        q = new_q
+        if maxDelt < eps: return q
+    
+    return q
 
 # Given a state, return the value of that state, with respect to the
 # current definition of the q function
 def value(q, s):
-    # Your code here (COPY FROM HW9)
-    raise NotImplementedError('value')
+    """ Return Q*(s,a) based on current Q
+
+    >>> q = TabularQ([0,1,2,3],['b','c'])
+    >>> q.set(0, 'b', 5)
+    >>> q.set(0, 'c', 10)
+    >>> q_star = value(q,0)
+    >>> q_star
+    10
+    """
+    # Your code here
+    return max( [q.get(s, a) for a in q.actions] )
 
 # Given a state, return the action that is greedy with reespect to the
 # current definition of the q function
@@ -272,4 +304,4 @@ class NNQ:
             
             print(Xs)
             print(Xs[key][:,0,:])
-            self.models[key].fit(Xs[key][:,0,:], np.array([Ys[key]]).T, epochs=self.epochs)
+            self.models[key].fit(Xs[key][:,0,:], np.array([Ys[key]]).T, epochs=self.epochs, )

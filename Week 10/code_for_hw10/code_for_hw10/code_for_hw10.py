@@ -5,6 +5,7 @@ import dist
 import util
 import pickle
 from mdp10 import MDP, TabularQ, NNQ, value_iteration, Q_learn, Q_learn_batch, greedy, sim_episode, evaluate
+import time
 
 class No_Exit(MDP):
     # Like breakout or pong, but one player, no walls to break out, no
@@ -260,14 +261,21 @@ def test_solve_play(d = 6, draw=False,
     return animation
 
 ##########   Test cases    
+t1 = time.time()
 
 # Value Iteration
-# test_solve_play()
+# test_solve_play(draw=True)
 # Tabular Q-learn
-# test_learn_play(iters=100000, tabular=True, batch=False)
+# test_learn_play(iters=1000000, tabular=True, batch=False, draw=True)
+
 # Tabular Batch Q-learn
-# test_learn_play(iters=10, tabular=True, batch=True) # Check: why do we want fewer iterations here?
+# test_learn_play(iters=300, tabular=True, batch=True) # Check: why do we want fewer iterations here?
+
 # NN Q-learn
 # test_learn_play(iters=100000, tabular=False, batch=False)
+
 # NN Batch Q-learn (Fitted Q-learn)
-# test_learn_play(iters=10, tabular=False, batch=True)
+test_learn_play(iters=10, tabular=False, batch=True)
+t2 = time.time()
+
+print(t2 - t1)
