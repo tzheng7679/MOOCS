@@ -3,7 +3,7 @@ import random
 import numpy as np
 from dist import uniform_dist, delta_dist, mixture_dist
 from util import argmax_with_val, argmax
-from keras._tf_keras.keras.models import Sequential
+from keras._tf_keras.keras.models import Sequential, Model
 from keras._tf_keras.keras.layers import Dense
 from keras._tf_keras.keras.optimizers import Adam
 
@@ -243,11 +243,33 @@ class NNQ:
         self.states = states
         self.state2vec = state2vec
         self.epochs = epochs
-        self.models = None              # Your code here
-        if self.models is None: raise NotImplementedError('NNQ.models')
+
+        self.models = {}
+        for action in actions:
+            self.models[action] = make_nn(state2vec(states[0]).shape[1], num_hidden_layers=num_layers, num_units=num_units)
+
     def get(self, s, a):
         # Your code here
-        raise NotImplementedError('NNQ.get')
+        return self.models[a].predict(self.state2vec(s))
+    
     def update(self, data, lr):
         # Your code here
-        raise NotImplementedError('NNQ.update')
+        Xs = {}
+        Ys = {}
+        for point in data:
+            s = point[0]; a = point[1]; t = point[2]
+
+            if a not in Xs.keys():
+                Xs[a] = [self.state2vec(s)]
+                Ys[a] = [t]
+            else:
+                Xs[a].append(self.state2vec(s))
+                Ys[a].append(t)
+                
+        for key in Xs:
+            Xs[key] = np.array(Xs[key])
+            Ys[key] = np.array(Ys[key])
+            
+            print(Xs)
+            print(Xs[key][:,0,:])
+            self.models[key].fit(Xs[key][:,0,:], np.array([Ys[key]]).T, epochs=self.epochs)

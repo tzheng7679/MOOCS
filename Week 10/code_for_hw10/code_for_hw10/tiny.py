@@ -1,5 +1,5 @@
 from dist import DDist
-from mdp10 import MDP, TabularQ, Q_learn, Q_learn_batch
+from mdp10 import MDP, TabularQ, Q_learn, Q_learn_batch, NNQ
 import numpy as np
 
 def tinyTerminal(s):
@@ -38,4 +38,13 @@ def testBatchQ():
     return list(qf.q.items())
 
 np.random.seed(0)
-testQ()
+# testQ()
+
+def test_NNQ(data):
+    tiny = MDP([0, 1, 2, 3, 4], ['a', 'b'], tinyTrans, tinyR, 0.9)
+    tiny.terminal = tinyTerminal
+    q = NNQ(tiny.states, tiny.actions, tiny.state2vec, 2, 10)
+    q.update(data, 1)
+    return [q.get(s,a) for s in q.states for a in q.actions]
+
+print(test_NNQ([(0,'a',0.3),(1,'a',0.1),(0,'a',0.1),(1,'a',0.5)]))
