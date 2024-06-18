@@ -253,7 +253,7 @@ def load_seq(words, in_file,  interactive, interactive_top5, num_steps = 20000, 
 long_words = ['alabama', 'arkansas', 'mississippi', 'madagascar', 
               'taradiddle', 'hippopotamus', 'missasolemnis', 'abcdefghij']
 
-dirname = ''                            # default will be current directory
+dirname = 'code_for_lab11/'                            # default will be current directory
 
 def test_word(word, interactive = False, num_hidden=1, num_steps=10000, step_size=0.005):
     return generate_seq([word], num_hidden=num_hidden, num_steps=num_steps, step_size=step_size)
