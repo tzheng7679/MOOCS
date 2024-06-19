@@ -33,7 +33,7 @@ def ridge_analytic(X, Y, lam):
     # th_0 account for the centering
     th_0 = (ym - np.dot(xm, th))                 # 1 x 1
     return th.reshape((k,1)), float(th_0)
-
+"""
 # Example from lab handout
 Z = np.array([[1], [1], [5], [1], [5], [5], [1]])
 b_v = np.array([[3], [3], [3], [3], [3], [5], [1]])
@@ -44,6 +44,8 @@ print('With offsets', u_a, b_u_a)
 # Solution using previous model, with no offsets
 u_a_no_b = np.dot(np.linalg.inv(np.dot(B.T, B) + 1 * np.identity(2)), np.dot(B.T, Z))
 print('With no offsets', u_a_no_b)
+"""
+
 
 # After retrieving the output x from mf_als, you can use this function to save the output so
 # you don't have to re-train your model
@@ -105,10 +107,42 @@ def mf_als(data_train, data_validate, k=2, lam=0.02, max_iter=100, verbose=False
     if data_validate != None:
         print('ALS result for k =', k, ': rmse train =', rmse(data_train, x), '; rmse validate =', rmse(data_validate, x))
     return x
+"""
+My implementation
 
 def update_U(data, vs_from_u, x, k, lam):
     (u, b_u, v, b_v) = x
+    
     # Your code here
+    for a in range(len(u)):
+        vs = []
+        ratings = []
+        for pair in vs_from_u[a]:
+            item = pair[0]
+            rating = pair[1]
+
+            vs.append(np.vstack([v[item], [[1]]]))
+            ratings.append(rating - b_v[item][0])
+
+        items = np.array(vs)[:,:,0]
+        ratings = np.array([ratings]).T
+
+        print(items)
+        print(ratings)
+        ustar = np.linalg.inv(items.T @ items + lam * np.eye(N = items.shape[1])) @ items.T @ ratings
+        u[a] = ustar[:-1]
+        b_u[a] = ustar[-1,0]
+        
+    print(x[0])
+    return x
+"""
+def update_U(data, vs_from_u, x, k, lam):
+    (u, b_u, v, b_v) = x
+    for a in range(len(u)):
+        if not vs_from_u[a]: continue
+        V = np.hstack([v[i] for (i, _) in vs_from_u[a]]).T
+        y = np.array([r-b_v[i] for (i, r) in vs_from_u[a]])
+        u[a], b_u[a] = ridge_analytic(V, y, lam)
     return x
 
 #Test case for update_U
@@ -161,11 +195,15 @@ def update_U_test():
   assert np.all(np.isclose(x_list[3], np.array([[0.0], [0.0], [0.0], [0.0], [0.0]])))
   print("Test passed!")
   
-#update_U_test()
+# update_U_test()
 
 def update_V(data, us_from_v, x, k, lam):
     (u, b_u, v, b_v) = x
-    # Your code here
+    for i in range(len(v)):
+        if not us_from_v[i]: continue
+        V = np.hstack([u[a] for (a, _) in us_from_v[i]]).T
+        y = np.array([r-b_u[a] for (a, r) in us_from_v[i]])
+        v[i], b_v[i] = ridge_analytic(V, y, lam)
     return x
 
 # Simple validate case
@@ -199,7 +237,28 @@ def sgd_step(data, x, lam, step):
     (a, i, r) = data
     (u, b_u, v, b_v) = x
     (lam_u, lam_v) = lam
+
+    u_a = u[a]
+    v_i = v[i]
+    b_ua = b_u[a]
+    b_vi = b_v[i]
     # Your code here
+    # updating u
+
+    e = (r - u_a.T @ v_i - b_ua - b_vi)
+
+    u[a] = u_a - step * (
+        -v_i * e + 2 * lam_u[a] * u_a
+    )
+
+    v[i] = v[i] - step * (
+        -v_i * e + 2 * lam_v[i] * v_i
+    )
+
+    db = -e
+    b_u[a] = b_u[a] - step * db
+    b_v[i] = b_v[i] - step * db
+
     return x
 
 def sgd_step_test():
@@ -242,7 +301,7 @@ def sgd_step_test():
   assert np.all(np.isclose(x_list[3], np.array([[0.08086477989447478], [0.0], [0.0], [0.0], [0.0]])))
   print("Test passed!")
   
-#sgd_step_test()
+# sgd_step_test()
 
 
 # Simple validate case
@@ -340,3 +399,161 @@ def tuning_als(max_iter_als=20, verbose=False):
         for lam in lams:
             print('ALS, k =', k, 'and lam', lam)
             mf_als(b1, v1, lam = lam, max_iter=max_iter_als, k=k, verbose=verbose)
+
+data = load_ratings_data()
+movies_dict, genres_dict = load_movies()
+"""
+Part 4.1
+"""
+# model = mf_als(data, None, k=10, lam=1, max_iter=20)
+# save_model(model)
+model = load_model()
+# id = 270894
+
+# watched = []
+# fivestars = []
+# for d in data:
+#     if d[0] == id:
+#         if d[2] == 5:
+#             fivestars.append(d[1])
+#         watched.append(d[1])
+
+# freqs = {}
+# for mov in fivestars:
+#     gens = genres_dict[mov]
+#     for g in gens:
+#         if g not in freqs.keys():
+#             freqs[g] = 0
+#         else:
+#             freqs[g] += 1
+    
+# print(freqs)
+# print(list(freqs))
+# max_gen = max([(k, v) for k, v in freqs.items()], 
+#               key = lambda pair: pair[1]
+#               )[0]
+# print(max_gen)
+
+# weights_u = model[0][id]
+# bias_u = model[1][id]
+# weights_v = model[2]
+# bias_v = model[3]
+
+# keys = list(movies_dict.keys())
+
+# top_num = 50
+# top = [(i, weights_u.T@weights_v[i] + bias_u + bias_v[i]) \
+#         for i in keys[:top_num]]
+
+# for i in keys[top_num:]:
+#     if i not in watched:
+#         top.append(
+#             (i, weights_u.T@weights_v[i] + bias_u + bias_v[i])
+#         )
+#         top = sorted(top, key = lambda pair: pair[1], reverse=True)[:top_num]
+
+# matching_fav = 0
+# for pair in top:
+#     mov_id = pair[0]
+#     print(movies_dict[mov_id])
+
+#     if max_gen in genres_dict[mov_id]: matching_fav += 1
+
+# print(matching_fav)
+
+"""
+Part 4.2
+"""
+weights_v = model[2]
+def get_top(top=10, compare_to_id = 2628):# Insert movie id here (260 for A New Hope, 2628 for Phantom Menace)
+    compare_to = weights_v[compare_to_id].T / np.linalg.norm(weights_v[compare_to_id])
+
+    def cos(v2): return np.dot(compare_to, v2) / np.linalg.norm(v2)
+
+    keys = list(movies_dict.keys())
+    keys.remove(compare_to_id)
+
+    similarlity = [(i, cos(weights_v[i])) for i in keys[:top]]
+
+    for i in keys[top:]:
+        similarlity.append(
+            (i, cos(weights_v[i]))
+        )
+
+        similarlity = sorted(similarlity, reverse=True, key = lambda pair: pair[1])[:top]
+
+    print([i[0] for i in similarlity])
+    for pair in similarlity:
+        print(f"ID: {pair[0]} ---- Title: {movies_dict[pair[0]]}")
+# get_top()        
+
+def get_average():
+    s = 0
+    n = 0
+
+    def cos(v1, v2): return np.dot(v1.T, v2) / (np.linalg.norm(v1) + np.linalg.norm(v2))
+
+    keys = list(movies_dict.keys())
+    for i in range(len(keys)):
+        for k in range(i + 1, len(keys)):
+            s += cos(weights_v[keys[i]], weights_v[keys[k]])
+            n += 1
+    
+    print(s / n)
+# get_average()
+
+def get_genre_similarities():
+    similarities = {}
+
+    def cos(v1, v2): return np.dot(v1.T, v2) / (np.linalg.norm(v1) + np.linalg.norm(v2))
+    keys = list(movies_dict.keys())
+
+    for genre in genres:
+        s = 0
+        n = 0
+
+        for i in range(len(keys)):
+            for k in range(i + 1, len(keys)):
+                if genre in genres_dict[keys[i]] and genre in genres_dict[keys[k]]:
+                    s += cos(weights_v[keys[i]], weights_v[keys[k]])
+                    n += 1
+        
+        similarities[genre] = s / n
+    
+    print("Genre ------ Similarity")
+    for k, v in similarities.items():
+        print(f"{k}: {v}")
+    
+    print(max(similarities.items(), key = lambda pair: pair[1]))
+    print(min(similarities.items(), key = lambda pair: pair[1]))
+# get_genre_similarities()
+
+def get_similarities_across_genres(base_genre = "Comedy"):
+    similarities = {}
+
+    def cos(v1, v2): return np.dot(v1.T, v2) / (np.linalg.norm(v1) + np.linalg.norm(v2))
+    keys = list(movies_dict.keys())
+
+    for genre in genres:
+        if genre == base_genre: continue
+
+        s = 0
+        n = 0
+
+        for i in range(len(keys)):
+            for k in range(i + 1, len(keys)):
+                if (genre in genres_dict[keys[i]] and base_genre in genres_dict[keys[k]]) \
+                or (genre in genres_dict[keys[k]] and base_genre in genres_dict[keys[i]]):
+                    s += cos(weights_v[keys[i]], weights_v[keys[k]])
+                    n += 1
+        
+        similarities[genre] = s / n
+    
+    print(f"Genre ------ Similarity to {base_genre}")
+    for k, v in similarities.items():
+        print(f"{k}: {v}")
+    
+    print(max(similarities.items(), key = lambda pair: pair[1]))
+    print(min(similarities.items(), key = lambda pair: pair[1]))
+# get_similarities_across_genres()
+
