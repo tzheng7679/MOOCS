@@ -11,7 +11,7 @@ import csv
 class DTN:
     N_THRESHOLD = 4 # don't split if node has fewer examples than this
     H_THRESHOLD = .01 # don't split if node has entropy less than this
-    H_REDUCTION_THRESHOLD = .001 # don't split if it doesn't reduce H by this
+    H_REDUCTION_THRESHOLD = .1 # don't split if it doesn't reduce H by this
     index = 0
     def __init__(self, data=None, config = None):
         self.config = config
@@ -165,7 +165,7 @@ def nn_eval(trainingX, trainingY, testX, testY, verbose=True, config=None):
 # For auto dataset (same as in HW 3, except returns data in rows)
 ######################################################################
 
-def load_auto_data(path_data='auto-mpg.tsv'):
+def load_auto_data(path_data='code_for_lab13/code_for_lab13/auto-mpg.tsv'):
     """
     Returns a list of dict with keys:
     """
@@ -257,17 +257,17 @@ features = [('weight', standard),
             ('origin', one_hot)]
 '''
 
-'''
+
 # USE FOR QUESTION 1.D and 3.B
 # The choice of feature processing for each feature, mpg is always raw and
 # does not need to be specified.  Other choices are standard and one_hot.
 # 'name' is not numeric and would need a different encoding.
 features = [('weight', raw),
             ('origin', raw)]
-'''
+
 
 # Returns a list of dictionaries.  Keys are the column names, including mpg.
-auto_data_all = load_auto_data('auto-mpg.tsv')
+auto_data_all = load_auto_data('code_for_lab13/code_for_lab13/auto-mpg.tsv')
 
 # Construct the standard data and label arrays
 auto_data, auto_labels = auto_data_and_labels(auto_data_all, features)
@@ -315,16 +315,14 @@ def auto_xval(data, labels, k=10, decision_tree=True, verbose=True, config=None)
 
 print('Loaded non_parametric.py')
 
-'''
+
 # Questions 1 and 2
-print(auto_xval(auto_data, auto_labels))
-'''
+# print(auto_xval(auto_data, auto_labels))
+
 
 ######################################################################
 # Apply the nearest neighbor model to the auto data
 ######################################################################
 
-'''
 # Question 3
 print(auto_xval(auto_data, auto_labels, decision_tree=False))
-'''
