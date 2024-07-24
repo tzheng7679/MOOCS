@@ -1,0 +1,64 @@
+{% extends "auctions/layout.html" %}
+
+{% block body %}
+{% if message %}
+<p>{{message}}</p>
+{% endif %}
+<form action="{% url 'create' %}" method="post">
+    {% csrf_token %}
+    <div class="input-group mb-3">
+        <div class="input-group-prepend">
+            <span class="input-group-text">Item Name</span>
+        </div>
+        <input type="text" class="form-control" id="exampleFormControlInput1" name="itemname">
+    </div>
+
+    <div class="input-group mb-3">
+        <div class="input-group-prepend">
+            <span class="input-group-text">Item Description</span>
+        </div>
+        <textarea class="form-control" id="exampleFormControlTextarea1" rows="3" name="itemdescription"></textarea>
+    </div>
+
+    <div class="input-group mb-3">
+        <div class="input-group-prepend">
+            <span class="input-group-text">$</span>
+        </div>
+        <input type="number" class="form-control" aria-label="Amount (to the nearest dollar)" min=0 name="itemprice">
+    </div>
+
+    <div class="input-group mb-3">
+        <div class="input-group-prepend">
+            <span class="input-group-text">Image Link</span>
+        </div>
+        <input type="text" class="form-control" name="image">
+    </div>
+
+    <div class="form-group">
+        <div class="input-group-prepend">
+            <span class="input-group-text">Image Link</span>
+        </div>
+        <select multiple class="form-control" id="exampleFormControlSelect2" name="catagory">
+            <option selected>N/A</option>
+            <option>Books</option>
+            <option>Business & Industrial</option>
+            <option>Clothing, Shoes & Accessories</option>
+            <option>Collectibles</option>
+            <option>Consumer Electronics</option>
+            <option>Crafts</option>
+            <option>Dolls & Bears</option>
+            <option>Home & Garden</option>
+            <option>Motors</option>
+            <option>Pet Supplies</option>
+            <option>Sporting Goods</option>
+            <option>Sports Mem, Cards & Fan Shop</option>
+            <option>Toys & Hobbies</option>
+            <option>Antiques</option>
+            <option>Computers/Tablets & Networking</option>
+
+        </select>
+    </div>
+
+    <input type="submit" />
+</form>
+{% endblock %}

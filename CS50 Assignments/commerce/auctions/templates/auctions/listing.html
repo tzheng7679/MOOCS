@@ -1,0 +1,59 @@
+{% extends "auctions/layout.html" %}
+{% block body %}
+{% if l.image %}
+<div class="text-center">
+    <img src="{{l.image}}" class="img-fluid" alt="Responsive image" />
+</div>
+{% endif %}
+<table class="table">
+    <tbody>
+        <tr>
+            <th scope="row">Catagory</th>
+            <td>{{l.catagory}}
+            <td>
+        </tr>
+        <tr>
+            <th scope="row">Seller</th>
+            <td>{{l.seller}}</td>
+        </tr>
+        <tr>
+            <th scope="row">Name</th>
+            <td>{{l.item}}</td>
+        </tr>
+        <tr>
+            <th scope="row">Description</th>
+            <td>{{l.description}}</td>
+        </tr>
+        <tr>
+            <th scope="row">Starting Price</th>
+            <td>${{l.price}}</td>
+        </tr>
+        <tr>
+            <th scope="row">Highest bid</th>
+            <td>${{max}}</td>
+        </tr>
+    </tbody>
+</table>
+<hr />
+<h2>Bids</h2>
+<ul>
+{% for bid in b %}
+<li>{{bid.bidder}}: ${{bid.price}}</li>
+{% endfor %}
+</ul>
+
+{% if message %}
+<p>message</p>
+{% endif %}
+<form action="{% url 'listing' id=l.id %}" method="post">
+    {% csrf_token %}
+    <div class="input-group mb-3">
+        <div class="input-group-prepend">
+            <span class="input-group-text">$</span>
+        </div>
+        <input type="number" class="form-control" aria-label="Amount (to the nearest dollar)" min={{minbid}} name="bidprice">
+    </div>
+
+    <input type="submit" />
+</form>
+{% endblock %}
