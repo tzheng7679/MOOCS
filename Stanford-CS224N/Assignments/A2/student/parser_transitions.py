@@ -33,6 +33,11 @@ class PartialParse(object):
         ### Note: If you need to use the sentence object to initialize anything, make sure to not directly 
         ###       reference the sentence object.  That is, remember to NOT modify the sentence object. 
 
+        self.stack = ["ROOT"]
+
+        self.buffer: list = sentence[0:]
+
+        self.dependencies = []
 
         ### END YOUR CODE
 
@@ -51,8 +56,21 @@ class PartialParse(object):
         ###         1. Shift
         ###         2. Left Arc
         ###         3. Right Arc
+        match transition:
+            case "S":
+                self.stack.append(self.buffer.pop(0))
+            
+            case "LA":
+                head = self.stack[-1]
+                dependent = self.stack.pop(-2)
 
+                self.dependencies.append( (head, dependent) )
+            
+            case "RA":
+                head = self.stack[-2]
+                dependent = self.stack.pop(-1)
 
+                self.dependencies.append( (head, dependent) )
         ### END YOUR CODE
 
     def parse(self, transitions):
@@ -103,7 +121,23 @@ def minibatch_parse(sentences, model, batch_size):
     ###             to remove objects from the `unfinished_parses` list. This will free the underlying memory that
     ###             is being accessed by `partial_parses` and may cause your code to crash.
 
+    dependencies = [None] * len(sentences)
+    unfinished_parses = [PartialParse(s[:]) for s in sentences]
+    indices = list(range(len(sentences)))
 
+    while len(unfinished_parses) != 0:
+        batch = unfinished_parses[:min(batch_size, len(unfinished_parses))]
+        print(batch[0].stack)
+        transitions = model.predict(batch)
+
+        for i in range(len(batch)):
+            unfinished_parses[i].parse_step(transitions[i])
+        
+        for i in range(len(batch) - 1, -1, -1):
+            parse = unfinished_parses[i]
+            if len(parse.buffer) == 0 and len(parse.stack) == 1:
+                unfinished_parses.pop(i)
+                dependencies[indices.pop(i)] = parse.dependencies
     ### END YOUR CODE
 
     return dependencies
@@ -221,14 +255,15 @@ def test_minibatch_parse():
     print("minibatch_parse test passed!")
 
 
-if __name__ == '__main__':
-    args = sys.argv
-    if len(args) != 2:
-        raise Exception("You did not provide a valid keyword. Either provide 'part_c' or 'part_d', when executing this script")
-    elif args[1] == "part_c":
-        test_parse_step()
-        test_parse()
-    elif args[1] == "part_d":
-        test_minibatch_parse()
-    else:
-        raise Exception("You did not provide a valid keyword. Either provide 'part_c' or 'part_d', when executing this script")
+# if __name__ == '__main__':
+#     args = sys.argv
+#     if len(args) != 2:
+#         raise Exception("You did not provide a valid keyword. Either provide 'part_c' or 'part_d', when executing this script")
+#     elif args[1] == "part_c":
+#         test_parse_step()
+#         test_parse()
+#     elif args[1] == "part_d":
+#         test_minibatch_parse()
+#     else:
+#         raise Exception("You did not provide a valid keyword. Either provide 'part_c' or 'part_d', when executing this script")
+test_minibatch_parse()

@@ -33,10 +33,10 @@ class Config(object):
     use_dep = True
     use_dep = use_dep and (not unlabeled)
     data_path = './data'
-    train_file = 'train.conll'
-    dev_file = 'dev.conll'
-    test_file = 'test.conll'
-    embedding_file = './data/en-cw.txt'
+    train_file = 'C:\\Users\\Tony Zheng\\codestuff\\MOOCs\\Stanford-CS224N\\Assignments\\A2\\student\\data\\train.conll'
+    dev_file = 'C:\\Users\\Tony Zheng\\codestuff\\MOOCs\\Stanford-CS224N\\Assignments\\A2\\student\\data\\dev.conll'
+    test_file = 'C:\\Users\\Tony Zheng\\codestuff\\MOOCs\\Stanford-CS224N\\Assignments\\A2\\student\\data\\test.conll'
+    embedding_file = 'C:\\Users\\Tony Zheng\\codestuff\\MOOCs\\Stanford-CS224N\\Assignments\\A2\\student\\data\\en-cw.txt'
 
 
 class Parser(object):
