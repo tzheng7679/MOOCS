@@ -36,7 +36,13 @@ def pad_sents(sents, pad_token):
 
     ### YOUR CODE HERE (~6 Lines)
 
+    max_len = len(sents[0])
+    for sent in sents: 
+        if len(sent) > max_len: 
+            max_len = len(sent) 
 
+    for i in range(len(sents)):
+        sents[i].append([pad_token] * len(max_len - sents[i]))
 
     ### END YOUR CODE
 

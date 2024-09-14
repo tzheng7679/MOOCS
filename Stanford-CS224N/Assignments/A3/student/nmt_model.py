@@ -86,6 +86,8 @@ class NMT(nn.Module):
         ###     Dropout Layer:
         ###         https://pytorch.org/docs/stable/generated/torch.nn.Dropout.html
 
+        self.post_embed_cnn = nn.Conv1d(kernel_size = 2, in_channels = embed_size, out_channels = embed_size, padding = "same")
+        self.encoder = nn.LSTM(input_size = embed_size, bias=True, bidirectional=True)
 
 
         ### END YOUR CODE
