@@ -19,6 +19,7 @@ import torch.nn as nn
 import torch.nn.utils
 import torch.nn.functional as F
 from torch.nn.utils.rnn import pad_packed_sequence, pack_padded_sequence
+from vocab import Vocab
 
 from model_embeddings import ModelEmbeddings
 
@@ -32,7 +33,7 @@ class NMT(nn.Module):
         - Global Attention Model (Luong, et al. 2015)
     """
 
-    def __init__(self, embed_size, hidden_size, vocab, dropout_rate=0.2):
+    def __init__(self, embed_size, hidden_size, vocab: Vocab, dropout_rate=0.2):
         """ Init NMT Model.
 
         @param embed_size (int): Embedding size (dimensionality)
@@ -45,7 +46,7 @@ class NMT(nn.Module):
         self.model_embeddings = ModelEmbeddings(embed_size, vocab)
         self.hidden_size = hidden_size
         self.dropout_rate = dropout_rate
-        self.vocab = vocab
+        self.vocab: Vocab = vocab
 
         # default values
         self.post_embed_cnn = None
@@ -87,8 +88,17 @@ class NMT(nn.Module):
         ###         https://pytorch.org/docs/stable/generated/torch.nn.Dropout.html
 
         self.post_embed_cnn = nn.Conv1d(kernel_size = 2, in_channels = embed_size, out_channels = embed_size, padding = "same")
-        self.encoder = nn.LSTM(input_size = embed_size, bias=True, bidirectional=True)
+        self.encoder = nn.LSTM(input_size = embed_size, hidden_size=hidden_size, bias=True, bidirectional=True)
+        self.decoder = nn.LSTMCell(input_size = 2*hidden_size, hidden_size = hidden_size, bias=True)
 
+        self.h_projection = nn.Linear(in_features=2*hidden_size, out_features=hidden_size, bias=False)
+        self.c_projection = nn.Linear(in_features=2*hidden_size, out_features=hidden_size, bias=False)
+
+        self.att_projection = nn.Linear(in_features=2*hidden_size, out_features=hidden_size, bias=False)
+        self.combined_output_projection = nn.Linear(in_features=3*hidden_size, out_features=hidden_size)
+
+        self.target_vocab_projection = nn.Linear(in_features=hidden_size, out_features=vocab.tgt.__len__())
+        self.dropout = nn.Dropout(p = dropout_rate)
 
         ### END YOUR CODE
 
@@ -182,10 +192,24 @@ class NMT(nn.Module):
         ###     Tensor Permute:
         ###         https://pytorch.org/docs/stable/generated/torch.permute.html
 
+        X = self.vocab.src.source(source_padded)
+        
+        X = torch.permute(X, (1, 2, 0))
+        X = self.post_embed_cnn(X)
+        X = torch.permute(X, (2, 0, 1))
 
+        X = pack_padded_sequence(X, lengths = source_lengths)
+        enc_hiddens, (last_hidden, last_cell) = self.encoder(X)
 
+        enc_hiddens = torch.permute(pad_packed_sequence(enc_hiddens), (1, 0, 2))
 
+        last_hidden = torch.concatenate((last_hidden[0], last_hidden[1]), 1)
+        last_cell = torch.concatenate((last_cell[0], last_cell[1]), 1)
 
+        init_decoder_hidden = self.h_projection(last_hidden)
+        init_decoder_cell = self.c_projection(last_cell)
+
+        dec_init_state = (init_decoder_hidden, init_decoder_cell)
         ### END YOUR CODE
 
         return enc_hiddens, dec_init_state
