@@ -354,12 +354,12 @@ class NMT(nn.Module):
         ###     Tensor Squeeze:
         ###         https://pytorch.org/docs/stable/generated/torch.squeeze.html
         
-        dec_state = self.decoder(Ybar_t, (dec_state[0], dec_state[1]))
+        dec_state = self.decoder(Ybar_t, dec_state)
         dec_hidden = dec_state[0]
         
         # get projection of encoder hiddens and permute to fit shape
         e_t = torch.unsqueeze(dec_hidden, dim=1) @ torch.permute(enc_hiddens_proj, dims=(0, 2, 1))
-        e_t = torch.squeeze(e_t)
+        e_t = torch.squeeze(e_t, dim = 1)
         ### END YOUR CODE
 
         # Set e_t to -inf where enc_masks has 1
@@ -396,7 +396,7 @@ class NMT(nn.Module):
         alpha_t = torch.unsqueeze(alpha_t, dim=1)
 
         a_t = alpha_t @ enc_hiddens
-        a_t = torch.squeeze(a_t)
+        a_t = torch.squeeze(a_t, dim=1)
 
         U_t = torch.concat(
             (dec_hidden, a_t), dim=1
