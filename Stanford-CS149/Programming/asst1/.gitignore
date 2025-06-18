@@ -1,0 +1,9 @@
+*.exe
+*.ppm
+**/objs/**
+common/**
+**/.vscode/**
+*.png
+Makefile
+*.h
+*.o

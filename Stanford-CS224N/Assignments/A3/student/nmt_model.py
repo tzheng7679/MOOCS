@@ -368,7 +368,7 @@ class NMT(nn.Module):
 
         ### YOUR CODE HERE (~6 Lines)
         ### TODO:
-        ###     1. Apply softmax to e_t to yield alpha_t
+        ###     1. Apply softmax to e_t to yield alpha_t 
         ###     2. Use batched matrix multiplication between alpha_t and enc_hiddens to obtain the
         ###         attention output vector, a_t.
         ###           - alpha_t is shape (b, src_len)
