@@ -1,9 +1,12 @@
-*.exe
-*.ppm
-**/objs/**
 common/**
+handout-images/**
 **/.vscode/**
-*.png
-Makefile
+**/objs/**
+
 *.h
 *.o
+*.exe
+Makefile
+
+*.ppm
+*.png

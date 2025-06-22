@@ -28,3 +28,9 @@ Speedups
 ![alt text](image.png)
 
 This seems to be a linear speedup (in terms of the factor). In terms of actual time, it would end up following a $1/x$ type function. It seems that odd numbered threads slow down rather than speed up the process.
+
+Re-mapping
+-----
+Thread workloads were remapped such that instead of each thread being assigned a contiguous chunk of rows, each thread is cycled through on each row (i.e. thread 1 gets rows 0, 8, 16, and thread 2 gets rows 1, 9, 17, etc...).
+
+16 threads does not speed up the program significantly; this is likely due to the fact that the computer only has 8 threads to run on, and as such 16 will just be adding more threads when there is not the execution capacity for them.
