@@ -137,11 +137,8 @@ const char *TaskSystemParallelThreadPoolSpinning::name()
 }
 
 TaskSystemParallelThreadPoolSpinning::~TaskSystemParallelThreadPoolSpinning() {
-    printf("Destructing");
     this->stop = true;
-    printf("Stopping");
     for(int i = 0; i < this->num_threads; i++) {
-        printf("Stopping thread %d\n", i);
         workers[i].join();
     }
 }
@@ -172,19 +169,15 @@ TaskSystemParallelThreadPoolSpinning::TaskSystemParallelThreadPoolSpinning(int n
 void TaskSystemParallelThreadPoolSpinning::spin() {
     while(true) {
         if(this->stop) {
-            printf("Breaking");
             break;
         }
 
         std::unique_lock<std::mutex> l(*mu); 
         if(this->curr_task->load() < this->total_tasks) {
             int task_to_run = this->curr_task->operator++() - 1;
-            printf("Running task %d\n", task_to_run);
             l.unlock();
             this->runnable->runTask(task_to_run, this->total_tasks);
-            printf("Finished task %d\n", task_to_run);
             if(this->completed_tasks->operator++() == this->total_tasks) {
-                printf("Notifying\n");
                 this->cond->notify_all();
             }
         }
@@ -207,9 +200,7 @@ void TaskSystemParallelThreadPoolSpinning::run(IRunnable *runnable, int num_tota
     this->total_tasks = num_total_tasks;
     // queue work
     this->runnable = runnable;
-    printf("Waiting\n");
     this->cond->wait(lock);
-    printf("Reached end of wait\n");
 }
 
 TaskID TaskSystemParallelThreadPoolSpinning::runAsyncWithDeps(IRunnable *runnable, int num_total_tasks,
