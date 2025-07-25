@@ -52,8 +52,9 @@ class TaskSystemParallelSpawn: public ITaskSystem {
 class TaskSystemParallelThreadPoolSpinning: public ITaskSystem {
     public:
         int num_threads;
-        bool destruct;
         std::thread* workers;
+        
+        bool destruct;
         std::mutex* mu;
         std::condition_variable* cond;
         
@@ -88,11 +89,12 @@ class TaskSystemParallelThreadPoolSleeping: public ITaskSystem {
         int num_threads;
         std::atomic<int>* waiting_threads;
         std::thread* workers;
-        std::mutex* mu;
         
         // condition variables
         bool destruct;
+        std::mutex* mu;
         std::condition_variable* new_work_assigned;
+        std::condition_variable* thread_waiting;
 
         // information about current tasks
         int curr_task;
