@@ -52,7 +52,7 @@ class TaskSystemParallelSpawn: public ITaskSystem {
 class TaskSystemParallelThreadPoolSpinning: public ITaskSystem {
     public:
         int num_threads;
-        bool stop;
+        bool destruct;
         std::thread* workers;
         std::mutex* mu;
         std::condition_variable* cond;
@@ -84,9 +84,26 @@ class TaskSystemParallelThreadPoolSpinning: public ITaskSystem {
  */
 class TaskSystemParallelThreadPoolSleeping: public ITaskSystem {
     public:
+        // workers and control flow
+        int num_threads;
+        std::atomic<int>* waiting_threads;
+        std::thread* workers;
+        std::mutex* mu;
+        
+        // condition variables
+        bool destruct;
+        std::condition_variable* new_work_assigned;
+
+        // information about current tasks
+        int curr_task;
+        int total_tasks;
+        IRunnable* runnable;
+
         TaskSystemParallelThreadPoolSleeping(int num_threads);
         ~TaskSystemParallelThreadPoolSleeping();
         const char* name();
+        /// @brief Method for spinning a thread
+        void spin();
         void run(IRunnable* runnable, int num_total_tasks);
         TaskID runAsyncWithDeps(IRunnable* runnable, int num_total_tasks,
                                 const std::vector<TaskID>& deps);
