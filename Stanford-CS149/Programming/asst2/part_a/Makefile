@@ -3,7 +3,6 @@ ARCH := $(shell uname -m)
 ifeq ($(ARCH), aarch64)
     CXX = g++
 else
-#     CXX = g++ -m64
     CXX = g++
 endif
 

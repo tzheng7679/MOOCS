@@ -9,6 +9,7 @@ IRunnable::~IRunnable() {}
 
 ITaskSystem::ITaskSystem(int num_threads) {}
 ITaskSystem::~ITaskSystem() {}
+/* #region Part A */
 
 /*
  * ================================================================
@@ -151,34 +152,41 @@ TaskSystemParallelThreadPoolSpinning::TaskSystemParallelThreadPoolSpinning(int n
 
     this->destruct = false;
     this->curr_task = new std::atomic<int>(0);
-    this->completed_tasks= new std::atomic<int>(0);
+    this->completed_tasks = new std::atomic<int>(0);
     this->total_tasks = 0;
-    
-    for(int i = 0; i < num_threads; i++) {
+
+    for (int i = 0; i < num_threads; i++)
+    {
         workers[i] = std::thread(&TaskSystemParallelThreadPoolSpinning::spin, this);
     }
 }
 
-TaskSystemParallelThreadPoolSpinning::~TaskSystemParallelThreadPoolSpinning() {
+TaskSystemParallelThreadPoolSpinning::~TaskSystemParallelThreadPoolSpinning()
+{
     this->destruct = true;
-    for(int i = 0; i < this->num_threads; i++) {
+    for (int i = 0; i < this->num_threads; i++)
+    {
         workers[i].join();
     }
 }
 
-
-void TaskSystemParallelThreadPoolSpinning::spin() {
-    while(true) {
-        if(this->destruct) {
+void TaskSystemParallelThreadPoolSpinning::spin()
+{
+    while (true)
+    {
+        if (this->destruct)
+        {
             break;
         }
 
-        std::unique_lock<std::mutex> l(*mu); 
-        if(this->curr_task->load() < this->total_tasks) {
+        std::unique_lock<std::mutex> l(*mu);
+        if (this->curr_task->load() < this->total_tasks)
+        {
             int task_to_run = this->curr_task->operator++() - 1;
             l.unlock();
             this->runnable->runTask(task_to_run, this->total_tasks);
-            if(this->completed_tasks->operator++() == this->total_tasks) {
+            if (this->completed_tasks->operator++() == this->total_tasks)
+            {
                 this->cond->notify_all();
             }
         }
@@ -219,6 +227,7 @@ void TaskSystemParallelThreadPoolSpinning::sync()
 
 /* #endregion */
 
+/* #endregion */
 /*
  * ================================================================
  * Parallel Thread Pool Sleeping Task System Implementation
@@ -232,23 +241,26 @@ const char *TaskSystemParallelThreadPoolSleeping::name()
 
 TaskSystemParallelThreadPoolSleeping::TaskSystemParallelThreadPoolSleeping(int num_threads) : ITaskSystem(num_threads)
 {
+    this->waiting_threads = new std::atomic<int>(0);
+
     // workers
     this->num_threads = num_threads;
-    this->waiting_threads = new std::atomic<int>(0);
     this->workers = new std::thread[this->num_threads];
-    
+
     // conditions/locks
     this->destruct = false;
     this->mu = new std::mutex();
+    this->finished_mu = new std::mutex();
     this->new_work_assigned = new std::condition_variable();
-    this->thread_waiting = new std::condition_variable();
-    
+    this->finished = new std::condition_variable();
+
     // initiate counters
     this->curr_task = 0;
     this->total_tasks = 0;
-    
+
     // spin up threads
-    for(int i = 0; i < num_threads; i++) {
+    for (int i = 0; i < num_threads; i++)
+    {
         workers[i] = std::thread(&TaskSystemParallelThreadPoolSleeping::spin, this);
     }
 }
@@ -259,31 +271,40 @@ TaskSystemParallelThreadPoolSleeping::~TaskSystemParallelThreadPoolSleeping()
     this->destruct = true;
     this->new_work_assigned->notify_all();
 
-    for(int i = 0; i < this->num_threads; i++) {
+    for (int i = 0; i < this->num_threads; i++)
+    {
         workers[i].join();
     }
 }
 
-/// @brief Spins up a new thread. 
-void TaskSystemParallelThreadPoolSleeping::spin() {
-    while(true) {
-        if(this->destruct) {
+/// @brief Spins up a new thread.
+void TaskSystemParallelThreadPoolSleeping::spin()
+{
+    while (true)
+    {
+        if (this->destruct)
+        {
             break;
         }
 
         std::unique_lock<std::mutex> lock(*mu);
         // if there are more tasks unassigned
-        if(this->curr_task < this->total_tasks) {
+        if (this->curr_task < this->total_tasks)
+        {
             // assign the current value of this->curr_task
             int task_to_run = this->curr_task++;
             lock.unlock();
 
             // run the assigned task
             this->runnable->runTask(task_to_run, this->total_tasks);
-        } else {
-            // if out of work, wait for new work to be assigned
+        }
+        else
+        {
             this->waiting_threads->operator++();
-            this->thread_waiting->notify_all();
+            this->finished_mu->lock();
+            this->finished_mu->unlock();
+            this->finished->notify_all();
+
             this->new_work_assigned->wait(lock);
         }
     }
@@ -303,14 +324,12 @@ void TaskSystemParallelThreadPoolSleeping::run(IRunnable *runnable, int num_tota
 
     lock.unlock();
 
+    std::unique_lock<std::mutex> finished_lock(*finished_mu);
     this->new_work_assigned->notify_all();
-    
-    // wait for threads to finish work
-    while(this->waiting_threads->load() < this->num_threads) {
-        std::unique_lock<std::mutex> lock(*mu);
-        this->thread_waiting->wait(lock);
-    }
-    // printf("Exiting main thread\n");
+
+    this->finished->wait(finished_lock, [&]()
+                         { return this->waiting_threads->load() == this->num_threads; });
+    finished_lock.unlock();
 }
 
 TaskID TaskSystemParallelThreadPoolSleeping::runAsyncWithDeps(IRunnable *runnable, int num_total_tasks,
