@@ -85,22 +85,22 @@ class TaskSystemParallelThreadPoolSpinning: public ITaskSystem {
  */
 class TaskSystemParallelThreadPoolSleeping: public ITaskSystem {
     public:
-        std::atomic<int>* waiting_threads;
+        std::atomic<int> waiting_threads;
 
         // workers and control flow
         int num_threads;
         std::thread* workers;
         
         // condition variables
-        bool destruct;
-        std::mutex* mu;
-        std::mutex* finished_mu;
-        std::condition_variable* new_work_assigned;
-        std::condition_variable* finished;
+        bool destruct = false;
+        std::mutex mu;
+        std::mutex finished_mu;
+        std::condition_variable new_work_assigned;
+        std::condition_variable finished;
 
         // information about current tasks
-        int curr_task;
-        int total_tasks;
+        int curr_task = 0;
+        int total_tasks = 0;
         IRunnable* runnable;
 
         TaskSystemParallelThreadPoolSleeping(int num_threads);
